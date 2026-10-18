@@ -1,0 +1,18 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import sectionRoutes from './routes/sectionRoutes.js';
+import employeeRoutes from './routes/employeeRoutes.js';
+const app = express();
+app.use(cors({ origin: process.env.CLIENT_URL?.split(',') || true }));
+app.use(express.json({ limit: '1mb' })); app.use(morgan('dev'));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'employee-management-api' }));
+app.use('/api/auth', authRoutes); app.use('/api/users', userRoutes); app.use('/api/sections', sectionRoutes); app.use('/api/employees', employeeRoutes);
+app.use((req, res) => res.status(404).json({ message: `Route not found: ${req.method} ${req.originalUrl}` }));
+app.use((err, req, res, _next) => { console.error(err); if (err.code === 11000) return res.status(409).json({ message: 'A record with this unique value already exists.' }); if (err.name === 'ValidationError') return res.status(400).json({ message: err.message }); res.status(500).json({ message: process.env.NODE_ENV === 'production' ? 'Internal server error.' : err.message }); });
+const port = process.env.PORT || 5000;
+connectDB().then(() => app.listen(port, () => console.log(`API running on http://localhost:${port}`))).catch(err => { console.error('Database connection failed:', err.message); process.exit(1); });
