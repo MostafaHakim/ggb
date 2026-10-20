@@ -10,7 +10,7 @@ export async function login(req, res) {
     return res.status(400).json({ message: "ID and password are required." });
   const user = await User.findOne({ empId: empId }).select("+password");
   if (!user || !(await user.comparePassword(password)))
-    return res.status(401).json({ message: "Email or password is incorrect." });
+    return res.status(401).json({ message: "EmpId or password is incorrect." });
   if (!user.active)
     return res.status(403).json({ message: "This account is disabled." });
   res.json({
